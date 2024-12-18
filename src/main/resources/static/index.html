@@ -45,8 +45,7 @@
             var response = document.getElementById('response');
             var p = document.createElement('p');
             p.style.wordWrap = 'break-word';
-            p.appendChild(document.createTextNode(messageOutput.from + ": "
-                + messageOutput.text + " (" + messageOutput.time + ")"));
+            p.appendChild(document.createTextNode(messageOutput.text ));
             response.appendChild(p);
         }
     </script>
@@ -54,7 +53,7 @@
 <body onload="disconnect()">
 <div>
     <div>
-        <input type="text" id="uiid" placeholder="Your secret page"/>
+        <input type="text" id="uuid" placeholder="Your secret page"/>
     </div>
     <br />
     <div>
