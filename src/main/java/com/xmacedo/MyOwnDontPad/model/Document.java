@@ -1,8 +1,13 @@
-package com.xmacedo.MyOwnDontPad;
+package com.xmacedo.MyOwnDontPad.model;
 
 public class Document {
     private String uuid;
     private String text;
+
+    public Document(String uuid, String text) {
+        this.uuid = uuid;
+        this.text = text;
+    }
 
     public String getUuid() {
         return uuid;

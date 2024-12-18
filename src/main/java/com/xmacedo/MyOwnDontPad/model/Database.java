@@ -1,4 +1,4 @@
-package com.xmacedo.MyOwnDontPad;
+package com.xmacedo.MyOwnDontPad.model;
 
 import java.util.HashMap;
 import java.util.Map;
