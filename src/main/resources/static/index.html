@@ -3,24 +3,29 @@
     <title>Chat WebSocket</title>
     <script src="js/sockjs-0.3.4.js"></script>
     <script src="js/stomp.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js" crossorigin="anonymous"></script>
     <script type="text/javascript">
         var stompClient = null;
 
         function setConnected(connected) {
             document.getElementById('connect').disabled = connected;
             document.getElementById('disconnect').disabled = !connected;
-            document.getElementById('conversationDiv').style.visibility
+            document.getElementById('textDiv').style.visibility
                 = connected ? 'visible' : 'hidden';
-            document.getElementById('response').innerHTML = '';
+            //document.getElementById('text').innerHTML = 'Write a message...';
         }
 
         function connect() {
+
+            //var response = document.getElementById('text');
+
             var socket = new SockJS('/chat');
             stompClient = Stomp.over(socket);
             stompClient.connect({}, function(frame) {
                 setConnected(true);
                 console.log('Connected: ' + frame);
                 stompClient.subscribe('/topic/messages', function(messageOutput) {
+                    //console.log("Retorno: "+ messageOutput.text);
                     showMessageOutput(JSON.parse(messageOutput.body));
                 });
             });
@@ -34,20 +39,48 @@
             console.log("Disconnected");
         }
 
-        function sendMessage() {
-            var uuid = document.getElementById('uuid').value;
-            var text = document.getElementById('text').value;
-            stompClient.send("/app/chat", {},
-                JSON.stringify({'uuid':uuid, 'text':text}));
+        function showMessageOutput(messageOutput) {
+            console.log("Aki: "+messageOutput);
+            console.log("Aki1: "+messageOutput.text);
+            var response = document.getElementById('text');
+
+            console.log("response: "+response);
+            console.log("response.text: "+response.text);
+            //var p = document.createElement('p');
+            //p.style.wordWrap = 'break-word';
+            //.appendChild(document.createTextNode(messageOutput.text ));
+            response(messageOutput.text);
+            document.getElementById('text').innerHTML =messageOutput;
         }
 
-        function showMessageOutput(messageOutput) {
-            var response = document.getElementById('response');
-            var p = document.createElement('p');
-            p.style.wordWrap = 'break-word';
-            p.appendChild(document.createTextNode(messageOutput.text ));
-            response.appendChild(p);
-        }
+    //     jquery to add events
+        $(document).ready(function () {
+            var typingTime;
+            var finishTypeInterval = 2000;
+
+            $('text').on('keyup', function(){
+                clearTimeout(typingTime);
+                typingTime = setTimeout(finishType, finishTypeInterval);
+            });
+
+            $('text').on('keydown', function(){
+                clearTimeout(typingTime);
+            });
+
+
+            function finishType(){
+                console.log("Finish typing");
+                sendMessage();
+            }
+
+            function sendMessage() {
+                var uuid = document.getElementById('uuid').value;
+                var text = document.getElementById('text').value;
+                stompClient.send("/app/chat", {},
+                    JSON.stringify({'uuid':uuid, 'text':text}));
+            }
+        });
+
     </script>
 </head>
 <body onload="disconnect()">
@@ -63,9 +96,8 @@
         </button>
     </div>
     <br />
-    <div id="conversationDiv">
-        <input type="text" id="text" placeholder="Write a message..."/>
-        <button id="sendMessage" onclick="sendMessage();">Send</button>
+    <div id="textDiv">
+        <textarea id="text">Write a message...</textarea>
         <p id="response"></p>
     </div>
 </div>

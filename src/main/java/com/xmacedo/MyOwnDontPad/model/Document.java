@@ -24,4 +24,12 @@ public class Document {
     public void setText(String text) {
         this.text = text;
     }
+
+    @Override
+    public String toString() {
+        return "Document{" +
+                "uuid='" + uuid + '\'' +
+                ", text='" + text + '\'' +
+                '}';
+    }
 }

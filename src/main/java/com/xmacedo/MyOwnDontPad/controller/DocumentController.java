@@ -16,6 +16,7 @@ public class DocumentController {
     @MessageMapping("/chat")
     @SendTo("/topic/messages")
     public Document send(Document message) {
+        System.out.println("received message: "+message);
         return documentService.saveText(message);
     }
 
