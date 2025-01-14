@@ -3,90 +3,79 @@
     <title>Chat WebSocket</title>
     <script src="js/sockjs-0.3.4.js"></script>
     <script src="js/stomp.js"></script>
-    <script src="https://code.jquery.com/jquery-3.7.1.min.js" crossorigin="anonymous"></script>
     <script type="text/javascript">
-        var stompClient = null;
+        let socket;
+        let autoSaveInterval;
 
         function setConnected(connected) {
             document.getElementById('connect').disabled = connected;
+            document.getElementById('pageName').disabled = connected;
             document.getElementById('disconnect').disabled = !connected;
+
             document.getElementById('textDiv').style.visibility
                 = connected ? 'visible' : 'hidden';
-            //document.getElementById('text').innerHTML = 'Write a message...';
         }
 
         function connect() {
+            setConnected(true);
+            const pageName = document.getElementById("pageName").value;
+            if (!pageName) {
+                alert("Please enter a page name.");
+                return;
+            }
 
-            //var response = document.getElementById('text');
+            socket = new WebSocket("ws://localhost:8080/textPage");
 
-            var socket = new SockJS('/chat');
-            stompClient = Stomp.over(socket);
-            stompClient.connect({}, function(frame) {
-                setConnected(true);
-                console.log('Connected: ' + frame);
-                stompClient.subscribe('/topic/messages', function(messageOutput) {
-                    //console.log("Retorno: "+ messageOutput.text);
-                    showMessageOutput(JSON.parse(messageOutput.body));
-                });
-            });
+            socket.onopen = () => {
+                console.log("Connected to WebSocket");
+                const payload = JSON.stringify({ pageName });
+                socket.send(payload);
+                autoSaveInterval = setInterval(() => {
+                    saveContent();
+                }, 2000);
+            };
+
+            socket.onmessage = (event) => {
+                const response = JSON.parse(event.data);
+                document.getElementById("content").value = response.content || "";
+            };
+
+            socket.onclose = () => {
+                console.log("Disconnected from WebSocket");
+                clearInterval(autoSaveInterval);
+            };
+
+            socket.onerror = (error) => {
+                console.error("WebSocket error:", error);
+                clearInterval(autoSaveInterval);
+            };
+        }
+        function saveContent() {
+            if (!socket || socket.readyState !== WebSocket.OPEN) {
+                return;
+            }
+
+            const pageName = document.getElementById("pageName").value;
+            const content = document.getElementById("content").value;
+            const payload = JSON.stringify({ pageName, content });
+            socket.send(payload);
         }
 
         function disconnect() {
-            if(stompClient != null) {
-                stompClient.disconnect();
-            }
             setConnected(false);
+            if(socket) {
+                socket.close();
+            }
+
             console.log("Disconnected");
         }
-
-        function showMessageOutput(messageOutput) {
-            console.log("Aki: "+messageOutput);
-            console.log("Aki1: "+messageOutput.text);
-            var response = document.getElementById('text');
-
-            console.log("response: "+response);
-            console.log("response.text: "+response.text);
-            //var p = document.createElement('p');
-            //p.style.wordWrap = 'break-word';
-            //.appendChild(document.createTextNode(messageOutput.text ));
-            response(messageOutput.text);
-            document.getElementById('text').innerHTML =messageOutput;
-        }
-
-    //     jquery to add events
-        $(document).ready(function () {
-            var typingTime;
-            var finishTypeInterval = 2000;
-
-            $('text').on('keyup', function(){
-                clearTimeout(typingTime);
-                typingTime = setTimeout(finishType, finishTypeInterval);
-            });
-
-            $('text').on('keydown', function(){
-                clearTimeout(typingTime);
-            });
-
-
-            function finishType(){
-                console.log("Finish typing");
-                sendMessage();
-            }
-
-            function sendMessage() {
-                var uuid = document.getElementById('uuid').value;
-                var text = document.getElementById('text').value;
-                stompClient.send("/app/chat", {},
-                    JSON.stringify({'uuid':uuid, 'text':text}));
-            }
-        });
 
     </script>
 </head>
 <body onload="disconnect()">
 <div>
     <div>
-        <input type="text" id="uuid" placeholder="Your secret page"/>
+        <input type="text" id="pageName" name="pageName" placeholder="Your secret page"/>
     </div>
     <br />
     <div>
@@ -96,10 +85,11 @@
         </button>
     </div>
     <br />
-    <div id="textDiv">
-        <textarea id="text">Write a message...</textarea>
-        <p id="response"></p>
-    </div>
+    <form id="textForm" name="textForm">
+        <div id="textDiv">
+            <textarea id="content" name="content" rows="10" cols="50">Write your text...</textarea>
+        </div>
+    </form>
 </div>
 
 </body>
