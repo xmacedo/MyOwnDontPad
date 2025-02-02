@@ -7,21 +7,15 @@ import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArrayList;
 
 @Component
-public class TextPageWebSocketHandler  extends TextWebSocketHandler {
+public class TextPageWebSocketHandler extends TextWebSocketHandler {
     private final Map<String, String> pages = new ConcurrentHashMap<>();
     private final Map<WebSocketSession, String> sessionPageMap = new ConcurrentHashMap<>();
     private final ObjectMapper mapper = new ObjectMapper();
 
-    @Override
-    public void afterConnectionEstablished(WebSocketSession session) {
-        sessionPageMap.put(session, "x1x2");
-    }
 
     @Override
     public void afterConnectionClosed(WebSocketSession session, CloseStatus status) {
@@ -30,10 +24,16 @@ public class TextPageWebSocketHandler  extends TextWebSocketHandler {
 
     @Override
     protected void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
-        Map<String, String> payload = mapper.readValue(message.getPayload(), new TypeReference<>() {});
+        Map<String, String> payload = mapper.readValue(message.getPayload(), new TypeReference<>() {
+        });
 
         String pageName = payload.get("pageName");
         String content = payload.get("content");
+
+        if (pageName == null) {
+            return;
+        }
+        sessionPageMap.put(session, pageName);
 
         if (content != null) {
             // Save or update the page content
@@ -57,10 +57,6 @@ public class TextPageWebSocketHandler  extends TextWebSocketHandler {
         for (Map.Entry<WebSocketSession, String> entry : sessionPageMap.entrySet()) {
             WebSocketSession session = entry.getKey();
             String sessionPage = entry.getValue();
-
-            if(sessionPage.equals("x1x2")) {
-                sessionPageMap.replace(session, pageName);
-            }
 
             if (session.isOpen() && sessionPage.equals(pageName)) {
                 try {
