@@ -30,9 +30,6 @@
                 console.log("Connected to WebSocket");
                 const payload = JSON.stringify({ pageName });
                 socket.send(payload);
-                autoSaveInterval = setInterval(() => {
-                    saveContent();
-                }, 2000);
             };
 
             socket.onmessage = (event) => {
@@ -50,6 +47,14 @@
                 clearInterval(autoSaveInterval);
             };
         }
+
+        function waitUntilStopDigit() {
+            clearTimeout(autoSaveInterval);
+            autoSaveInterval = setTimeout(() => {
+                saveContent();
+            }, 500);
+        }
+
         function saveContent() {
             if (!socket || socket.readyState !== WebSocket.OPEN) {
                 return;
@@ -87,7 +92,7 @@
     <br />
     <form id="textForm" name="textForm">
         <div id="textDiv">
-            <textarea id="content" name="content" rows="10" cols="50">Write your text...</textarea>
+            <textarea id="content" name="content" rows="10" cols="50" oninput="waitUntilStopDigit()">Write your text...</textarea>
         </div>
     </form>
 </div>
