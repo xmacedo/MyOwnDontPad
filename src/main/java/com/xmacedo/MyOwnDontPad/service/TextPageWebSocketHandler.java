@@ -16,7 +16,6 @@ public class TextPageWebSocketHandler extends TextWebSocketHandler {
     private final Map<WebSocketSession, String> sessionPageMap = new ConcurrentHashMap<>();
     private final ObjectMapper mapper = new ObjectMapper();
 
-
     @Override
     public void afterConnectionClosed(WebSocketSession session, CloseStatus status) {
         sessionPageMap.remove(session);
